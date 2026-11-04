@@ -170,4 +170,11 @@ async def main():
         usd = [e for e in out if e["country"] == "USD"]
         bias = sum(e["bias"] for e in usd)
         with open(OUTPUT, "w", encoding="utf-8") as f:
-            json.dump({"fetched":datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),"total_events":len(out),"usd_events":len(usd),"usd_bias":round(bias,2),"events":out}, f, separators=(",",":"), ensure_
+            json.dump({"fetched":datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),"total_events":len(out),"usd_events":len(usd),"usd_bias":round(bias,2),"events":out}, f, separators=(",",":"), ensure_ascii=True)
+        print(f"OK: {len(out)} events ({len(usd)} USD), bias={bias:.2f}")
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
