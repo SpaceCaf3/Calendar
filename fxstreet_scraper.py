@@ -70,7 +70,7 @@ def to_utc(tc, day_str):
 
 async def scrape():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
         ctx = await browser.new_context(timezone_id="America/New_York", user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
         page = await ctx.new_page()
         await page.goto(URL, timeout=45000, wait_until="domcontentloaded")
@@ -79,6 +79,13 @@ async def scrape():
             await page.wait_for_timeout(3000)
         except:
             pass
+
+        print("DEBUG title:", await page.title(), "| url:", page.url)
+        try:
+            body = (await page.inner_text("body"))[:300].replace("\n", " ")
+        except Exception:
+            body = ""
+        print("DEBUG body:", body)
 
         rows = await page.eval_on_selector_all("table tbody tr", """
             els => els.map(tr => {
@@ -94,6 +101,7 @@ async def scrape():
                 });
             })
         """)
+        print("DEBUG table rows:", len(rows))
         await browser.close()
 
     events, current_day = [], ""
@@ -167,6 +175,9 @@ async def main():
             if k in seen: continue
             seen.add(k)
             if e["country"]: out.append(e)
+        if not out:
+            print("ERROR: 0 events parsed; keeping previous file", file=sys.stderr)
+            sys.exit(1)
         usd = [e for e in out if e["country"] == "USD"]
         bias = sum(e["bias"] for e in usd)
         with open(OUTPUT, "w", encoding="utf-8") as f:
