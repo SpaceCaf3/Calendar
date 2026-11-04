@@ -70,7 +70,7 @@ def to_utc(tc, day_str):
 
 async def scrape():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
+        browser = await p.chromium.launch(headless=(os.environ.get("HEADED") != "1"), args=["--disable-blink-features=AutomationControlled"])
         ctx = await browser.new_context(timezone_id="America/New_York", user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
         page = await ctx.new_page()
         await page.goto(URL, timeout=45000, wait_until="domcontentloaded")
